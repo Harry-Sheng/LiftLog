@@ -35,6 +35,8 @@ export function convertVideo(rawVideoName: string, processedVideoName: string) {
         "23", // Set quality (lower is better, range: 18–28)
         "-preset",
         "fast", // Faster encoding
+        "-pix_fmt",
+        "yuv420p", // Ensure 8-bit color depth (browser-compatible)
         "-c:a",
         "aac", // Use AAC codec for audio
         "-b:a",
