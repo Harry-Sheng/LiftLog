@@ -26,7 +26,22 @@ export function setupDirectories() {
 export function convertVideo(rawVideoName: string, processedVideoName: string) {
   return new Promise<void>((resolve, reject) => {
     ffmpeg(`${localRawVideoPath}/${rawVideoName}`)
-      .outputOptions("-vf", "scale=-1:360") // 360p
+      .outputOptions(
+        "-vf",
+        "scale=-1:360", // Scale to 360p
+        "-c:v",
+        "libx264", // Use H.264 codec for video
+        "-crf",
+        "23", // Set quality (lower is better, range: 18–28)
+        "-preset",
+        "fast", // Faster encoding
+        "-c:a",
+        "aac", // Use AAC codec for audio
+        "-b:a",
+        "128k", // Set audio bitrate
+        "-movflags",
+        "+faststart" // Optimize for streaming
+      )
       .on("end", function () {
         console.log("Processing finished successfully")
         resolve()
