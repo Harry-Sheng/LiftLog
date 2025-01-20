@@ -1,41 +1,26 @@
 "use client"
 
 import { Fragment } from "react"
-import { uploadVideo } from "../firebase/functions"
+import { useRouter } from "next/navigation"
 
 import styles from "./upload.module.css"
 
 export default function Upload() {
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.item(0)
-    if (file) {
-      handleUpload(file)
-    }
-  }
+  const router = useRouter()
 
-  const handleUpload = async (file: File) => {
-    try {
-      const response = await uploadVideo(file)
-      alert(
-        `File uploaded successfully. Server responded with: ${JSON.stringify(
-          response
-        )}`
-      )
-    } catch (error) {
-      alert(`Failed to upload file: ${error}`)
+  const handleRedirect = () => {
+    if (router) {
+      router.push("/upload")
     }
   }
 
   return (
     <Fragment>
-      <input
-        id="upload"
-        className={styles.uploadInput}
-        type="file"
-        accept="video/*"
-        onChange={handleFileChange}
-      />
-      <label htmlFor="upload" className={styles.uploadButton}>
+      <label
+        htmlFor="upload"
+        className={styles.uploadButton}
+        onClick={handleRedirect}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
