@@ -11,6 +11,7 @@ export interface Video {
   status?: "processing" | "processed"
   title?: string
   description?: string
+  thumbnail?: string
 }
 
 export async function uploadVideo(file: File) {
