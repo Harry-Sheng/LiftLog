@@ -38,7 +38,7 @@ export default function VideoUploadForm() {
     setIsUploading(true)
 
     try {
-      await uploadVideo(video)
+      await uploadVideo(video, thumbnail, title, description)
       router.push("/")
     } catch (error) {
       console.error("Upload failed:", error)

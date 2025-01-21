@@ -6,6 +6,7 @@ const storage = new Storage()
 
 const rawVideoBucketName = "liftlog-raw-videos"
 const processedVideoBucketName = "liftlog-processed-videos"
+const thumbnailBucketName = "liftlog-thumbnails"
 
 const localRawVideoPath = "./raw-videos"
 const localProcessedVideoPath = "./processed-videos"
@@ -148,4 +149,12 @@ function ensureDirectoryExistence(dirPath: string) {
     fs.mkdirSync(dirPath, { recursive: true }) // recursive: true enables creating nested directories
     console.log(`Directory created at ${dirPath}`)
   }
+}
+
+export async function setThumbnailPublic(thumbnail: string) {
+  const bucket = storage.bucket(thumbnailBucketName)
+
+  // Set the video to be publicly readable
+  await bucket.file(thumbnail).makePublic()
+  console.log(`Thumbnail ${thumbnail} is now public.`)
 }

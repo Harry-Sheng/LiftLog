@@ -3,6 +3,13 @@ import { functions } from "./firebase"
 
 const getVideosFunction = httpsCallable(functions, "getVideos")
 const generateUploadUrlFunction = httpsCallable(functions, "generateUploadUrl")
+const generateUploadThumbnailUrlFunction = httpsCallable(
+  functions,
+  "generateUploadThumbnailUrl"
+)
+const saveThumbnail = httpsCallable(functions, "saveThumbnail")
+
+const saveVideoData = httpsCallable(functions, "saveVideoData")
 
 export interface Video {
   id?: string
@@ -14,7 +21,12 @@ export interface Video {
   thumbnail?: string
 }
 
-export async function uploadVideo(file: File) {
+export async function uploadVideo(
+  file: File,
+  image: File,
+  title: string,
+  description: string
+) {
   const response: any = await generateUploadUrlFunction({
     fileExtension: file.name.split(".").pop(),
   })
@@ -27,6 +39,34 @@ export async function uploadVideo(file: File) {
       "Content-Type": file.type,
     },
   })
+
+  if (uploadResult.ok) {
+    await saveVideoData({
+      filename: response?.data?.fileName,
+      title,
+      description,
+    })
+  }
+
+  const thumbnailResponse: any = await generateUploadThumbnailUrlFunction({
+    fileExtension: image.name.split(".").pop(),
+  })
+
+  //upload via the signed url
+  const uploadImage = await fetch(thumbnailResponse?.data?.url, {
+    method: "Put",
+    body: image,
+    headers: {
+      "Content-Type": image.type,
+    },
+  })
+
+  if (uploadImage.ok) {
+    await saveThumbnail({
+      filename: response?.data?.fileName,
+      thumbnail: thumbnailResponse?.data?.fileName,
+    })
+  }
 
   return uploadResult
 }

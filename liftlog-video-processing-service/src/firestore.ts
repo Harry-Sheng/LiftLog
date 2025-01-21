@@ -15,6 +15,7 @@ export interface Video {
   status?: "processing" | "processed"
   title?: string
   description?: string
+  thumbnail?: string
 }
 
 async function getVideo(videoId: string) {
@@ -23,6 +24,14 @@ async function getVideo(videoId: string) {
     .doc(videoId)
     .get()
   return (snapshot.data() as Video) ?? {}
+}
+
+export async function getThumbnail(videoId: string) {
+  const video = await getVideo(videoId)
+  if (!video.thumbnail) {
+    throw new Error("Video does not have a thumbnail.")
+  }
+  return video.thumbnail
 }
 
 export function setVideo(videoId: string, video: Video) {

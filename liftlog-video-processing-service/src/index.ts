@@ -7,8 +7,9 @@ import {
   deleteProcessedVideo,
   convertVideo,
   setupDirectories,
+  setThumbnailPublic,
 } from "./storage"
-import { isVideoNew, setVideo } from "./firestore"
+import { isVideoNew, setVideo, getThumbnail } from "./firestore"
 
 // Create the local directories for videos
 setupDirectories()
@@ -37,6 +38,7 @@ app.post("/process-video", async (req: any, res: any) => {
   const outputFileName = `processed-${inputFileName}`
   const videoId = inputFileName.split(".")[0]
 
+  console.log(`Processing video: ${inputFileName}`)
   if (!isVideoNew(videoId)) {
     return res
       .status(400)
@@ -70,6 +72,11 @@ app.post("/process-video", async (req: any, res: any) => {
     status: "processed",
     filename: outputFileName,
   })
+
+  const thumbnail: string = await getThumbnail(videoId)
+  if (thumbnail != "") {
+    setThumbnailPublic(thumbnail)
+  }
 
   await Promise.all([
     deleteRawVideo(inputFileName),
