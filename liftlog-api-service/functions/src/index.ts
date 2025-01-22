@@ -39,6 +39,7 @@ export const createUser = functions.identity.beforeUserCreated(
       uid: user.uid,
       email: user.email,
       photoUrl: user.photoURL,
+      displayName: user.displayName || "Anonymous",
     }
 
     firestore.collection("users").doc(user.uid).set(userInfo)
@@ -126,17 +127,23 @@ export const saveVideoData = onCall({ maxInstances: 1 }, async (request) => {
     const { filename, title, description } = request.data
     const id = filename.split(".")[0]
     const uid = filename.split("-")[0]
-    await firestore.collection(videoCollectionId).doc(id).set(
-      {
-        filename,
-        title,
-        description,
-        id,
-        uid,
-        thumbnail: "",
-      },
-      { merge: true }
-    )
+    const user = await getUserInfo(uid)
+    await firestore
+      .collection(videoCollectionId)
+      .doc(id)
+      .set(
+        {
+          filename,
+          title,
+          description,
+          id,
+          uid,
+          thumbnail: "",
+          userDisplayName: user?.displayName,
+          userPhotoUrl: user?.photoUrl ?? "",
+        },
+        { merge: true }
+      )
 
     return { message: "Video title and description saved successfully." }
   } catch (error) {
@@ -176,3 +183,17 @@ export const saveThumbnail = onCall({ maxInstances: 1 }, async (request) => {
     )
   }
 })
+
+export const getUserInfo = async (uid: string) => {
+  let userInfo
+  try {
+    userInfo = await firestore.collection("users").doc(uid).get()
+  } catch (error) {
+    console.error("Error getting user info:", error)
+    throw new functions.https.HttpsError(
+      "internal",
+      "An error occurred while getting user info."
+    )
+  }
+  return userInfo.data()
+}

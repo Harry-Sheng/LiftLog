@@ -74,7 +74,7 @@ app.post("/process-video", async (req: any, res: any) => {
   })
 
   const thumbnail: string = await getThumbnail(videoId)
-  if (thumbnail != "") {
+  if (thumbnail) {
     setThumbnailPublic(thumbnail)
   }
 
