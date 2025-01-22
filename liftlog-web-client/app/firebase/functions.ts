@@ -11,6 +11,10 @@ const saveThumbnail = httpsCallable(functions, "saveThumbnail")
 
 const saveVideoData = httpsCallable(functions, "saveVideoData")
 
+const getVideoFunction = httpsCallable(functions, "getVideo")
+
+const getFiveVideosFunction = httpsCallable(functions, "getFiveVideos")
+
 export interface Video {
   id?: string
   uid?: string
@@ -75,5 +79,15 @@ export async function uploadVideo(
 
 export async function getVideos() {
   const response: any = await getVideosFunction()
+  return response.data as Video[]
+}
+
+export async function getVideo(id: string) {
+  const response: any = await getVideoFunction({ id })
+  return response.data as Video
+}
+
+export async function getFiveVideo() {
+  const response: any = await getFiveVideosFunction()
   return response.data as Video[]
 }

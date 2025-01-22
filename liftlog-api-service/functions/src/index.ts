@@ -114,6 +114,20 @@ export const getVideos = onCall({ maxInstances: 1 }, async () => {
   return querySnapshot.docs.map((doc) => doc.data())
 })
 
+export const getFiveVideos = onCall({ maxInstances: 1 }, async () => {
+  const querySnapshot = await firestore
+    .collection(videoCollectionId)
+    .limit(5)
+    .get()
+  return querySnapshot.docs.map((doc) => doc.data())
+})
+
+export const getVideo = onCall({ maxInstances: 1 }, async (request) => {
+  const id = request.data.id
+  const doc = await firestore.collection(videoCollectionId).doc(id).get()
+  return doc.data()
+})
+
 export const saveVideoData = onCall({ maxInstances: 1 }, async (request) => {
   // Check if the user is authenticated
   if (!request.auth) {
