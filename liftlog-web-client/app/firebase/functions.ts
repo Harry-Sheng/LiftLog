@@ -19,6 +19,8 @@ export interface Video {
   title?: string
   description?: string
   thumbnail?: string
+  userDisplayName?: string
+  userPhotoUrl?: string
 }
 
 export async function uploadVideo(
