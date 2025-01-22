@@ -12,6 +12,7 @@ const storage = new Storage()
 const rawVideoBucketName = "liftlog-raw-videos"
 const videoCollectionId = "videos"
 const thumbnailBucketName = "liftlog-thumbnails"
+const region = "australia-southeast1"
 
 export interface Video {
   id?: string
@@ -52,7 +53,7 @@ export const createUser = functions.identity.beforeUserCreated(
 )
 
 export const generateUploadUrl = onCall(
-  { maxInstances: 1 },
+  { maxInstances: 1, region: region },
   async (request) => {
     // Check if the user is authentication
     if (!request.auth) {
@@ -81,7 +82,7 @@ export const generateUploadUrl = onCall(
 )
 
 export const generateUploadThumbnailUrl = onCall(
-  { maxInstances: 1 },
+  { maxInstances: 1, region: region },
   async (request) => {
     // Check if the user is authentication
     if (!request.auth) {
@@ -109,101 +110,116 @@ export const generateUploadThumbnailUrl = onCall(
   }
 )
 
-export const getVideos = onCall({ maxInstances: 1 }, async () => {
-  const querySnapshot = await firestore
-    .collection(videoCollectionId)
-    .limit(30)
-    .get()
-  return querySnapshot.docs.map((doc) => doc.data())
-})
-
-export const getFiveVideos = onCall({ maxInstances: 1 }, async () => {
-  const querySnapshot = await firestore
-    .collection(videoCollectionId)
-    .limit(5)
-    .get()
-  return querySnapshot.docs.map((doc) => doc.data())
-})
-
-export const getVideo = onCall({ maxInstances: 1 }, async (request) => {
-  const id = request.data.id
-  const doc = await firestore.collection(videoCollectionId).doc(id).get()
-  return doc.data()
-})
-
-export const saveVideoData = onCall({ maxInstances: 1 }, async (request) => {
-  // Check if the user is authenticated
-  if (!request.auth) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "The function must be called while authenticated."
-    )
-  }
-
-  try {
-    const { filename, title, description } = request.data
-    const id = filename.split(".")[0]
-    const uid = filename.split("-")[0]
-    const user = await getUserInfo(uid)
-    const timestamp = Number.parseInt(id?.split("-")[1] ?? "", 10)
-    const date = new Date(timestamp).toLocaleDateString("en-NZ")
-
-    await firestore
+export const getVideos = onCall(
+  { maxInstances: 1, region: region },
+  async () => {
+    const querySnapshot = await firestore
       .collection(videoCollectionId)
-      .doc(id)
-      .set(
+      .limit(35)
+      .get()
+    return querySnapshot.docs.map((doc) => doc.data())
+  }
+)
+
+export const getFiveVideos = onCall(
+  { maxInstances: 1, region: region },
+  async () => {
+    const querySnapshot = await firestore
+      .collection(videoCollectionId)
+      .limit(5)
+      .get()
+    return querySnapshot.docs.map((doc) => doc.data())
+  }
+)
+
+export const getVideo = onCall(
+  { maxInstances: 1, region: region },
+  async (request) => {
+    const id = request.data.id
+    const doc = await firestore.collection(videoCollectionId).doc(id).get()
+    return doc.data()
+  }
+)
+
+export const saveVideoData = onCall(
+  { maxInstances: 1, region: region },
+  async (request) => {
+    // Check if the user is authenticated
+    if (!request.auth) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "The function must be called while authenticated."
+      )
+    }
+
+    try {
+      const { filename, title, description } = request.data
+      const id = filename.split(".")[0]
+      const uid = filename.split("-")[0]
+      const user = await getUserInfo(uid)
+      const timestamp = Number.parseInt(id?.split("-")[1] ?? "", 10)
+      const date = new Date(timestamp).toLocaleDateString("en-NZ")
+
+      await firestore
+        .collection(videoCollectionId)
+        .doc(id)
+        .set(
+          {
+            filename,
+            title,
+            description,
+            id,
+            uid,
+            thumbnail: "",
+            userDisplayName: user?.displayName,
+            userPhotoUrl: user?.photoUrl ?? "",
+            date,
+          },
+          { merge: true }
+        )
+
+      return { message: "Video title and description saved successfully." }
+    } catch (error) {
+      console.error("Error saving video data:", error)
+      throw new functions.https.HttpsError(
+        "internal",
+        "An error occurred while saving video data."
+      )
+    }
+  }
+)
+
+export const saveThumbnail = onCall(
+  { maxInstances: 1, region: region },
+  async (request) => {
+    // Check if the user is authenticated
+    if (!request.auth) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "The function must be called while authenticated."
+      )
+    }
+
+    try {
+      const { filename, thumbnail } = request.data
+      const id = filename.split(".")[0]
+      await firestore.collection(videoCollectionId).doc(id).set(
         {
-          filename,
-          title,
-          description,
-          id,
-          uid,
-          thumbnail: "",
-          userDisplayName: user?.displayName,
-          userPhotoUrl: user?.photoUrl ?? "",
-          date,
+          thumbnail: thumbnail,
         },
         { merge: true }
       )
 
-    return { message: "Video title and description saved successfully." }
-  } catch (error) {
-    console.error("Error saving video data:", error)
-    throw new functions.https.HttpsError(
-      "internal",
-      "An error occurred while saving video data."
-    )
+      return { message: "Thumbnail saved successfully." }
+    } catch (error) {
+      console.error("Error saving thumbnail:", error)
+      throw new functions.https.HttpsError(
+        "internal",
+        "An error occurred while saving video thumbnail."
+      )
+    }
   }
-})
-
-export const saveThumbnail = onCall({ maxInstances: 1 }, async (request) => {
-  // Check if the user is authenticated
-  if (!request.auth) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "The function must be called while authenticated."
-    )
-  }
-
-  try {
-    const { filename, thumbnail } = request.data
-    const id = filename.split(".")[0]
-    await firestore.collection(videoCollectionId).doc(id).set(
-      {
-        thumbnail: thumbnail,
-      },
-      { merge: true }
-    )
-
-    return { message: "Thumbnail saved successfully." }
-  } catch (error) {
-    console.error("Error saving thumbnail:", error)
-    throw new functions.https.HttpsError(
-      "internal",
-      "An error occurred while saving video thumbnail."
-    )
-  }
-})
+)
 
 export const getUserInfo = async (uid: string) => {
   let userInfo
