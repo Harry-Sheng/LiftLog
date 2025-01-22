@@ -62,7 +62,7 @@ function WatchContent() {
             <video
               className="w-100"
               controls
-              src={`${videoPrefix}${videoSrc}`}
+              src={videoSrc ? `${videoPrefix}${videoSrc}` : ""}
             />
           </div>
 
