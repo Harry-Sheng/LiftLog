@@ -16,6 +16,9 @@ export interface Video {
   title?: string
   description?: string
   thumbnail?: string
+  userDisplayName?: string
+  userPhotoUrl?: string
+  date?: string
 }
 
 async function getVideo(videoId: string) {

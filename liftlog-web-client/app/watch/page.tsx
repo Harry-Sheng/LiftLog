@@ -28,7 +28,6 @@ export default function Watch() {
 
 function WatchContent() {
   const [video, setVideo] = useState<Video | null>(null)
-  const [date, setDate] = useState<string | null>(null)
   const [videos, setVideos] = useState<Video[] | null>(null)
   const searchParams = useSearchParams()
   const videoPrefix = "https://storage.googleapis.com/liftlog-processed-videos/"
@@ -44,8 +43,6 @@ function WatchContent() {
         const fetchedFiveVideos = await getFiveVideo()
         setVideos(fetchedFiveVideos)
         console.log(fetchedFiveVideos)
-        const timestamp = Number.parseInt(id?.split("-")[1] ?? "", 10)
-        setDate(new Date(timestamp).toLocaleDateString("en-NZ"))
       } catch (error) {
         console.error("Error fetching video:", error)
       }
@@ -74,7 +71,7 @@ function WatchContent() {
 
           {/* Video Metadata */}
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <p className="text-muted mb-0">{date ? `${date}` : "loading..."}</p>
+            <p className="text-muted mb-0">{video?.date || "Unknown Date"}</p>
           </div>
 
           <hr className="my-4" />

@@ -78,11 +78,7 @@ export default function Home() {
                           </h6>
                           <small className="text-muted">
                             {video.userDisplayName || "Unknown User"} • {}
-                            {video.id
-                              ? new Date(
-                                  Number.parseInt(video.id.split("-")[1])
-                                ).toLocaleDateString("en-NZ")
-                              : "Unknown Date"}
+                            {video.date || "Unknown Date"}
                           </small>
                         </div>
                       </div>

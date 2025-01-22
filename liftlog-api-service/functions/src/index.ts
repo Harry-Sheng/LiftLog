@@ -21,6 +21,9 @@ export interface Video {
   title?: string
   description?: string
   thumbnailUrl?: string
+  userDisplayName?: string
+  userPhotoUrl?: string
+  date?: string
 }
 
 export const createUser = functions.identity.beforeUserCreated(
@@ -142,6 +145,9 @@ export const saveVideoData = onCall({ maxInstances: 1 }, async (request) => {
     const id = filename.split(".")[0]
     const uid = filename.split("-")[0]
     const user = await getUserInfo(uid)
+    const timestamp = Number.parseInt(id?.split("-")[1] ?? "", 10)
+    const date = new Date(timestamp).toLocaleDateString("en-NZ")
+
     await firestore
       .collection(videoCollectionId)
       .doc(id)
@@ -155,6 +161,7 @@ export const saveVideoData = onCall({ maxInstances: 1 }, async (request) => {
           thumbnail: "",
           userDisplayName: user?.displayName,
           userPhotoUrl: user?.photoUrl ?? "",
+          date,
         },
         { merge: true }
       )
