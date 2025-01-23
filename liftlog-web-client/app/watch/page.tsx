@@ -58,14 +58,14 @@ function WatchContent() {
       <Row>
         <Col lg={8}>
           {/* Video Player */}
-          <div className="mb-4">
+          <div className="mb-4 bg-dark rounded shadow">
             <video
-              className="w-100"
+              className="img-fluid d-block mx-auto"
+              style={{ maxHeight: "700px" }}
               controls
               src={videoSrc ? `${videoPrefix}${videoSrc}` : ""}
             />
           </div>
-
           {/* Video Title */}
           <h1 className="mb-2">{video ? video?.title : "loading title..."}</h1>
 
