@@ -54,14 +54,14 @@ function WatchContent() {
   }, [id])
 
   return (
-    <Container className="py-4">
+    <Container fluid>
       <Row>
         <Col lg={8}>
           {/* Video Player */}
           <div className="mb-4 bg-dark rounded shadow">
             <video
               className="img-fluid d-block mx-auto"
-              style={{ maxHeight: "700px" }}
+              style={{ maxHeight: "700px", width: "100%" }}
               controls
               src={videoSrc ? `${videoPrefix}${videoSrc}` : ""}
             />
