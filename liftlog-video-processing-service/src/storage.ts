@@ -29,21 +29,9 @@ export function convertVideo(rawVideoName: string, processedVideoName: string) {
     ffmpeg(`${localRawVideoPath}/${rawVideoName}`)
       .outputOptions(
         "-vf",
-        "scale=-1:360", // Scale to 360p
-        "-c:v",
-        "libx264", // Use H.264 codec for video
-        "-crf",
-        "23", // Set quality (lower is better, range: 18–28)
-        "-preset",
-        "fast", // Faster encoding
+        "scale=-1:360,pad=ceil(iw/2)*2:ceil(ih/2)*2", // Scale to 360p
         "-pix_fmt",
-        "yuv420p", // Ensure 8-bit color depth (browser-compatible)
-        "-c:a",
-        "aac", // Use AAC codec for audio
-        "-b:a",
-        "128k", // Set audio bitrate
-        "-movflags",
-        "+faststart" // Optimize for streaming
+        "yuv420p" // Ensure 8-bit color depth (browser-compatible)
       )
       .on("end", function () {
         console.log("Processing finished successfully")
