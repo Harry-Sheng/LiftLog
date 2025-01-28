@@ -12,6 +12,7 @@ export default function VideoUploadForm() {
   const [video, setVideo] = useState<File | null>(null)
   const [thumbnail, setThumbnail] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [password, setPassword] = useState("")
   const router = useRouter()
 
   const handelVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,6 +31,15 @@ export default function VideoUploadForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    //Maybe replace this and implement in the backend
+    //but I think it's fine for now
+    const validPassword = "REPLACE_WITH_VALID_PASSWORD"
+
+    if (password !== validPassword) {
+      alert("Invalid password. Please try again.")
+      return
+    }
+
     if (!title || !description || !video || !thumbnail) {
       alert("Please fill in all fields and select both a video and thumbnail.")
       return
@@ -93,6 +103,16 @@ export default function VideoUploadForm() {
             type="file"
             accept="image/*"
             onChange={handleThumbnailChange}
+            required
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="password">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </Form.Group>
