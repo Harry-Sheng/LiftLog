@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Form, Button, Spinner } from "react-bootstrap"
 import { uploadVideo } from "../app/firebase/functions"
+import { FirebaseError } from "firebase/app"
 import "bootstrap/dist/css/bootstrap.min.css"
 
 export default function VideoUploadForm() {
@@ -31,14 +32,6 @@ export default function VideoUploadForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    //Maybe replace this and implement in the backend
-    //but I think it's fine for now
-    const validPassword = "REPLACE_WITH_VALID_PASSWORD"
-
-    if (password !== validPassword) {
-      alert("Invalid password. Please try again.")
-      return
-    }
 
     if (!title || !description || !video || !thumbnail) {
       alert("Please fill in all fields and select both a video and thumbnail.")
@@ -48,11 +41,22 @@ export default function VideoUploadForm() {
     setIsUploading(true)
 
     try {
-      await uploadVideo(video, thumbnail, title, description)
+      await uploadVideo(video, thumbnail, title, description, password)
       router.push("/")
     } catch (error) {
-      console.error("Upload failed:", error)
-      alert("Upload failed. Please try again.")
+      console.error("Full error object:", error)
+
+      if (error instanceof FirebaseError) {
+        if (error.code === "functions/permission-denied") {
+          alert("Upload failed: Invalid password.")
+        } else if (error.code === "functions/failed-precondition") {
+          alert("Upload failed: You must be signed in.")
+        } else {
+          alert("Upload failed: " + error.message)
+        }
+      } else {
+        alert("Upload failed: Unexpected error.")
+      }
     } finally {
       setIsUploading(false)
     }

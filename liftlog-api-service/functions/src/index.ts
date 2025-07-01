@@ -63,12 +63,22 @@ export const generateUploadUrl = onCall(
       )
     }
 
+    const { fileExtension, password } = request.data
+
+    // Check password
+    const expectedPassword = process.env.UPLOAD_PASSWORD
+    if (!password || password !== expectedPassword) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Invalid upload password."
+      )
+    }
+
     const auth = request.auth
-    const data = request.data
     const bucket = storage.bucket(rawVideoBucketName)
 
     // Generate a unique filename for upload
-    const fileName = `${auth.uid}-${Date.now()}.${data.fileExtension}`
+    const fileName = `${auth.uid}-${Date.now()}.${fileExtension}`
 
     // Get a v4 signed URL for uploading file
     const [url] = await bucket.file(fileName).getSignedUrl({
@@ -92,12 +102,21 @@ export const generateUploadThumbnailUrl = onCall(
       )
     }
 
+    const { fileExtension, password } = request.data
+
+    // Check password
+    const expectedPassword = process.env.UPLOAD_PASSWORD
+    if (!password || password !== expectedPassword) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Invalid upload password."
+      )
+    }
     const auth = request.auth
-    const data = request.data
     const bucket = storage.bucket(thumbnailBucketName)
 
     // Generate a unique filename for upload
-    const fileName = `${auth.uid}-${Date.now()}.${data.fileExtension}`
+    const fileName = `${auth.uid}-${Date.now()}.${fileExtension}`
 
     // Get a v4 signed URL for uploading file
     const [url] = await bucket.file(fileName).getSignedUrl({
