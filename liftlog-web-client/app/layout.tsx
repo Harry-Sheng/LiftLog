@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { MantineProvider } from "@mantine/core"
+import "@mantine/core/styles.css"
 import "./globals.css"
 import Navbar from "./navbar/navbar"
 
@@ -27,9 +29,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <Navbar />
-        {children}
+      <body
+        className={`${inter.className} ${geistSans.variable} ${geistMono.variable}`}
+      >
+        <MantineProvider defaultColorScheme="light">
+          <Navbar />
+          {children}
+        </MantineProvider>
       </body>
     </html>
   )
