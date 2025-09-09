@@ -14,6 +14,9 @@ const videoCollectionId = "videos"
 const thumbnailBucketName = "liftlog-thumbnails"
 const region = "australia-southeast1"
 
+export type LiftType = "SQUAT" | "BENCH" | "DEADLIFT"
+export type SexType = "M" | "F"
+
 export interface Video {
   id?: string
   uid?: string
@@ -25,6 +28,10 @@ export interface Video {
   userDisplayName?: string
   userPhotoUrl?: string
   date?: string
+  liftType: LiftType
+  sex: SexType
+  weightClass: number
+  weightKg: number
 }
 
 export const createUser = functions.identity.beforeUserCreated(
@@ -44,6 +51,12 @@ export const createUser = functions.identity.beforeUserCreated(
       email: user.email,
       photoUrl: user.photoURL,
       displayName: user.displayName || "Anonymous",
+      pbs: {
+        SQUAT: { weightKg: 0, videoId: "" },
+        BENCH: { weightKg: 0, videoId: "" },
+        DEADLIFT: { weightKg: 0, videoId: "" },
+        TOTAL: { weightKg: 0 },
+      },
     }
 
     firestore.collection("users").doc(user.uid).set(userInfo)
@@ -172,7 +185,16 @@ export const saveVideoData = onCall(
     }
 
     try {
-      const { filename, title, description } = request.data
+      const {
+        filename,
+        title,
+        description,
+        liftType,
+        sex,
+        weightClass,
+        weightKg,
+      } = request.data
+
       const id = filename.split(".")[0]
       const uid = filename.split("-")[0]
       const user = await getUserInfo(uid)
@@ -193,6 +215,10 @@ export const saveVideoData = onCall(
             userDisplayName: user?.displayName,
             userPhotoUrl: user?.photoUrl ?? "",
             date,
+            liftType,
+            sex,
+            weightClass,
+            weightKg,
           },
           { merge: true }
         )
