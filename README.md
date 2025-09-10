@@ -11,7 +11,8 @@ https://liftlog-web-client-222314261215.australia-southeast1.run.app
 1. [Features](#features)
 2. [Technologies Used](#technologies-used)
 3. [CodeBase Structure](#codebase-structure)
-4. [Images](#images)
+4. [Setup Instructions](#setup-instructions)
+5. [Images](#images)
 
 ## Features
 
@@ -60,6 +61,66 @@ src
     firestore.ts // contains functions for storing video metadata in Firestore
     index // contains function for processing video uploads, convert to 360p, and edit metadata in Firestore.
     storage.ts // contains functions for download/storing video in Google Cloud Storage, and converting video to 360p.
+```
+
+## Setup Instructions
+
+This guide helps you run the LiftLog platform locally.
+
+Make sure you have the following installed:
+
+- Node.js
+- Firebase CLI
+- Git
+
+1. Clone the repository
+
+```
+git clone https://github.com/Harry-Sheng/LiftLog
+cd liftlog
+```
+
+2. Install dependencies
+
+Web client:
+
+```
+cd liftlog-web-client
+npm install
+```
+
+API service :
+
+```
+cd ../liftlog-api-service
+npm install
+
+then cd functions
+npm install
+```
+
+3. Configure Firebase
+
+a. Set up .env in functions
+
+```
+UPLOAD_PASSWORD = your_password
+```
+
+b. Initialize Firebase project
+
+```
+firebase login
+firebase use --add
+firebase init functions
+firebase deploy --only functions
+```
+
+4. Run locally
+
+```
+cd liftlog-web-client
+npm run dev
 ```
 
 ## images

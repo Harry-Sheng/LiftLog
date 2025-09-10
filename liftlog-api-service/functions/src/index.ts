@@ -52,9 +52,9 @@ export const createUser = functions.identity.beforeUserCreated(
       photoUrl: user.photoURL,
       displayName: user.displayName || "Anonymous",
       pbs: {
-        SQUAT: { weightKg: 0, videoId: "" },
-        BENCH: { weightKg: 0, videoId: "" },
-        DEADLIFT: { weightKg: 0, videoId: "" },
+        SQUAT: { weightKg: 0, videoFilename: "" },
+        BENCH: { weightKg: 0, videoFilename: "" },
+        DEADLIFT: { weightKg: 0, videoFilename: "" },
         TOTAL: { weightKg: 0 },
       },
     }
@@ -195,12 +195,21 @@ export const saveVideoData = onCall(
         weightKg,
       } = request.data
 
+      // ---- basic validation ----
+      if (!filename || !liftType || typeof weightKg !== "number") {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "filename, liftType and weightKg are required."
+        )
+      }
+
       const id = filename.split(".")[0]
       const uid = filename.split("-")[0]
       const user = await getUserInfo(uid)
       const timestamp = Number.parseInt(id?.split("-")[1] ?? "", 10)
       const date = new Date(timestamp).toLocaleDateString("en-NZ")
 
+      //save video
       await firestore
         .collection(videoCollectionId)
         .doc(id)
@@ -222,6 +231,45 @@ export const saveVideoData = onCall(
           },
           { merge: true }
         )
+
+      // 2) PB check for THIS liftType only, then update TOTAL
+      const userRef = firestore.collection("users").doc(uid)
+      const userSnap = await userRef.get()
+
+      // defaults to avoid undefineds
+      const pbs =
+        userSnap.exists && (userSnap.data() as any)?.pbs
+          ? (userSnap.data() as any).pbs
+          : {
+              SQUAT: { weightKg: 0, videoFilename: "" },
+              BENCH: { weightKg: 0, videoFilename: "" },
+              DEADLIFT: { weightKg: 0, videoFilename: "" },
+              TOTAL: { weightKg: 0 },
+            }
+
+      const prev = Number(pbs?.[liftType]?.weightKg ?? 0)
+      const isPB = weightKg > prev
+
+      if (isPB) {
+        // compute new total using updated current lift and existing others
+        const s =
+          liftType === "SQUAT" ? weightKg : Number(pbs.SQUAT?.weightKg ?? 0)
+        const b =
+          liftType === "BENCH" ? weightKg : Number(pbs.BENCH?.weightKg ?? 0)
+        const d =
+          liftType === "DEADLIFT"
+            ? weightKg
+            : Number(pbs.DEADLIFT?.weightKg ?? 0)
+        const total = s + b + d
+
+        // update ONLY the changed PB fields + TOTAL (dot-paths)
+        const updates: Record<string, any> = {}
+        updates[`pbs.${liftType}.weightKg`] = weightKg
+        updates[`pbs.${liftType}.videoFilename`] = filename
+        updates[`pbs.TOTAL.weightKg`] = total
+
+        await userRef.set(updates, { merge: true })
+      }
 
       return { message: "Video title and description saved successfully." }
     } catch (error) {
