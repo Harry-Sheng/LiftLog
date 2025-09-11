@@ -15,6 +15,9 @@ const getVideoFunction = httpsCallable(functions, "getVideo")
 
 const getFiveVideosFunction = httpsCallable(functions, "getFiveVideos")
 
+type LiftType = "SQUAT" | "BENCH" | "DEADLIFT"
+type SexType = "M" | "F"
+
 export interface Video {
   id?: string
   uid?: string
@@ -22,10 +25,14 @@ export interface Video {
   status?: "processing" | "processed"
   title?: string
   description?: string
-  thumbnail?: string
+  thumbnailUrl?: string
   userDisplayName?: string
   userPhotoUrl?: string
   date?: string
+  liftType: LiftType
+  sex: SexType
+  weightClass: number
+  weightKg: number
 }
 
 export async function uploadVideo(
@@ -33,7 +40,11 @@ export async function uploadVideo(
   image: File,
   title: string,
   description: string,
-  password: string
+  password: string,
+  liftType: LiftType,
+  sex: SexType,
+  weightClass: number,
+  weightKg: number
 ) {
   const response: any = await generateUploadUrlFunction({
     fileExtension: file.name.split(".").pop(),
@@ -54,6 +65,10 @@ export async function uploadVideo(
       filename: response?.data?.fileName,
       title,
       description,
+      liftType,
+      sex,
+      weightClass,
+      weightKg,
     })
   }
 

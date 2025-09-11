@@ -7,6 +7,9 @@ import { uploadVideo } from "../app/firebase/functions"
 import { FirebaseError } from "firebase/app"
 import "bootstrap/dist/css/bootstrap.min.css"
 
+type LiftType = "SQUAT" | "BENCH" | "DEADLIFT"
+type SexType = "M" | "F"
+
 export default function VideoUploadForm() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -14,6 +17,10 @@ export default function VideoUploadForm() {
   const [thumbnail, setThumbnail] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [password, setPassword] = useState("")
+  const [liftType, setLiftType] = useState<LiftType>("SQUAT")
+  const [sex, setSex] = useState<SexType>("M")
+  const [weightClass, setWeightClass] = useState<number>(83)
+  const [weightKg, setWeightKg] = useState<number>(100)
   const router = useRouter()
 
   const handelVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +48,17 @@ export default function VideoUploadForm() {
     setIsUploading(true)
 
     try {
-      await uploadVideo(video, thumbnail, title, description, password)
+      await uploadVideo(
+        video,
+        thumbnail,
+        title,
+        description,
+        password,
+        liftType,
+        sex,
+        weightClass,
+        weightKg
+      )
       router.push("/")
     } catch (error) {
       console.error("Full error object:", error)
@@ -117,6 +134,58 @@ export default function VideoUploadForm() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </Form.Group>
+
+        {/* Lift details */}
+        <Form.Group className="mb-3" controlId="liftType">
+          <Form.Label>Lift</Form.Label>
+          <Form.Select
+            value={liftType}
+            onChange={(e) => setLiftType(e.target.value as LiftType)}
+            required
+          >
+            <option value="SQUAT">Squat</option>
+            <option value="BENCH">Bench</option>
+            <option value="DEADLIFT">Deadlift</option>
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="sex">
+          <Form.Label>Sex</Form.Label>
+          <Form.Select
+            value={sex}
+            onChange={(e) => setSex(e.target.value as SexType)}
+            required
+          >
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </Form.Select>
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="weightClass">
+          <Form.Label>Weight Class (kg)</Form.Label>
+          <Form.Control
+            type="number"
+            inputMode="numeric"
+            min={30}
+            step={1}
+            value={weightClass}
+            onChange={(e) => setWeightClass(Number(e.target.value))}
+            required
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="weightKg">
+          <Form.Label>Lift Weight (kg)</Form.Label>
+          <Form.Control
+            type="number"
+            inputMode="decimal"
+            min={1}
+            step={0.5}
+            value={weightKg}
+            onChange={(e) => setWeightKg(Number(e.target.value))}
             required
           />
         </Form.Group>
