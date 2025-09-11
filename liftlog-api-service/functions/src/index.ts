@@ -265,17 +265,13 @@ export const saveVideoData = onCall(
         const total = s + b + d
 
         // update ONLY the changed PB fields + TOTAL (dot-paths)
-        const updates: Record<string, any> = {}
-        updates[`pbs.${liftType}.weightKg`] = weightKg
-        updates[`pbs.${liftType}.videoFilename`] = filename
-        updates["pbs.TOTAL.weightKg"] = total
-
-        if (sex) updates["sex"] = sex
-        if (typeof weightClass === "number") {
-          updates["weightClass"] = weightClass
-        }
-
-        await userRef.set(updates, { merge: true })
+        await userRef.update({
+          [`pbs.${liftType}.weightKg`]: weightKg,
+          [`pbs.${liftType}.videoFilename`]: filename,
+          "pbs.TOTAL.weightKg": total,
+          ...(sex ? { sex } : {}),
+          ...(typeof weightClass === "number" ? { weightClass } : {}),
+        })
       }
 
       return { message: "Video title and description saved successfully." }
