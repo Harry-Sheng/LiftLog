@@ -57,6 +57,8 @@ export const createUser = functions.identity.beforeUserCreated(
         DEADLIFT: { weightKg: 0, videoFilename: "" },
         TOTAL: { weightKg: 0 },
       },
+      sex: "",
+      weightClass: 0,
     }
 
     firestore.collection("users").doc(user.uid).set(userInfo)
@@ -209,7 +211,7 @@ export const saveVideoData = onCall(
       const timestamp = Number.parseInt(id?.split("-")[1] ?? "", 10)
       const date = new Date(timestamp).toLocaleDateString("en-NZ")
 
-      //save video
+      // save video
       await firestore
         .collection(videoCollectionId)
         .doc(id)
@@ -238,14 +240,14 @@ export const saveVideoData = onCall(
 
       // defaults to avoid undefineds
       const pbs =
-        userSnap.exists && (userSnap.data() as any)?.pbs
-          ? (userSnap.data() as any).pbs
-          : {
-              SQUAT: { weightKg: 0, videoFilename: "" },
-              BENCH: { weightKg: 0, videoFilename: "" },
-              DEADLIFT: { weightKg: 0, videoFilename: "" },
-              TOTAL: { weightKg: 0 },
-            }
+        userSnap.exists && (userSnap.data() as any)?.pbs ?
+          (userSnap.data() as any).pbs :
+          {
+            SQUAT: { weightKg: 0, videoFilename: "" },
+            BENCH: { weightKg: 0, videoFilename: "" },
+            DEADLIFT: { weightKg: 0, videoFilename: "" },
+            TOTAL: { weightKg: 0 },
+          }
 
       const prev = Number(pbs?.[liftType]?.weightKg ?? 0)
       const isPB = weightKg > prev
@@ -257,16 +259,21 @@ export const saveVideoData = onCall(
         const b =
           liftType === "BENCH" ? weightKg : Number(pbs.BENCH?.weightKg ?? 0)
         const d =
-          liftType === "DEADLIFT"
-            ? weightKg
-            : Number(pbs.DEADLIFT?.weightKg ?? 0)
+          liftType === "DEADLIFT" ?
+            weightKg :
+            Number(pbs.DEADLIFT?.weightKg ?? 0)
         const total = s + b + d
 
         // update ONLY the changed PB fields + TOTAL (dot-paths)
         const updates: Record<string, any> = {}
         updates[`pbs.${liftType}.weightKg`] = weightKg
         updates[`pbs.${liftType}.videoFilename`] = filename
-        updates[`pbs.TOTAL.weightKg`] = total
+        updates["pbs.TOTAL.weightKg"] = total
+
+        if (sex) updates["sex"] = sex
+        if (typeof weightClass === "number") {
+          updates["weightClass"] = weightClass
+        }
 
         await userRef.set(updates, { merge: true })
       }
