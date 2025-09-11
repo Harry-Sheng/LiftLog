@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Video, getVideos } from "./firebase/functions"
 import { Container, Row, Col, Card, Image, Spinner } from "react-bootstrap"
 import "bootstrap/dist/css/bootstrap.min.css"
+import LeaderboardPage from "./leaderboard/page"
 
 export default function Home() {
   const [videos, setVideos] = useState<Video[] | null>(null)
@@ -26,6 +27,7 @@ export default function Home() {
 
   return (
     <Container>
+      <LeaderboardPage></LeaderboardPage>
       <h1 className="mb-4">Recommended Videos</h1>
       {videos ? null : (
         <Spinner

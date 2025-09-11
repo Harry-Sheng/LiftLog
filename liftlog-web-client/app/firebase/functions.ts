@@ -1,5 +1,14 @@
 import { httpsCallable } from "firebase/functions"
 import { functions } from "./firebase"
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  limit as qlimit,
+  QueryConstraint,
+} from "firebase/firestore"
+import { db } from "./firebase"
 
 const getVideosFunction = httpsCallable(functions, "getVideos")
 const generateUploadUrlFunction = httpsCallable(functions, "generateUploadUrl")
@@ -25,7 +34,7 @@ export interface Video {
   status?: "processing" | "processed"
   title?: string
   description?: string
-  thumbnailUrl?: string
+  thumbnail?: string
   userDisplayName?: string
   userPhotoUrl?: string
   date?: string
@@ -33,6 +42,70 @@ export interface Video {
   sex: SexType
   weightClass: number
   weightKg: number
+}
+
+export interface RowData {
+  uid: string
+  name: string
+  sex: SexType
+  weightClass: number
+  squatKg: number
+  benchKg: number
+  deadliftKg: number
+  totalKg: number
+}
+
+type FetchOpts = {
+  sex?: "ALL" | SexType
+  weightClass?: number
+  topN?: number
+  includeZeros?: boolean // include users with 0 totals
+}
+
+/**
+ * Fetch leaderboard rows from Firestore users collection.
+ * - Uses user.pbs.* for lifts
+ * - Returns sex & weightClass from user doc
+ * - bodyweightKg falls back to weightClass if not present
+ */
+export async function fetchLeaderboardRows(
+  opts: FetchOpts = {}
+): Promise<RowData[]> {
+  const { sex = "ALL", weightClass, topN = 50, includeZeros = false } = opts
+
+  const constraints: QueryConstraint[] = []
+  if (sex !== "ALL") constraints.push(where("sex", "==", sex))
+  if (typeof weightClass === "number")
+    constraints.push(where("weightClass", "==", weightClass))
+  if (topN) constraints.push(qlimit(topN))
+
+  const q = constraints.length
+    ? query(collection(db, "users"), ...constraints)
+    : query(collection(db, "users"), qlimit(topN))
+
+  const snap = await getDocs(q)
+
+  const rows: RowData[] = snap.docs.map((d) => {
+    const u = d.data()
+    const squat = Number(u?.pbs?.SQUAT?.weightKg ?? 0)
+    const bench = Number(u?.pbs?.BENCH?.weightKg ?? 0)
+    const dead = Number(u?.pbs?.DEADLIFT?.weightKg ?? 0)
+    const total = Number(u?.pbs?.TOTAL?.weightKg ?? squat + bench + dead)
+
+    return {
+      uid: u.uid || d.id,
+      name: u.displayName || "Anonymous",
+      sex: (u.sex as SexType) || "M",
+      weightClass: Number(u.weightClass ?? 0),
+      bodyweightKg: Number(u.bodyweightKg ?? u.weightClass ?? 0), // fallback
+      squatKg: squat,
+      benchKg: bench,
+      deadliftKg: dead,
+      totalKg: total,
+    }
+  })
+
+  return includeZeros ? rows : rows.filter((r) => r.totalKg > 0)
 }
 
 export async function uploadVideo(

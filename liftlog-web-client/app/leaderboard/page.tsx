@@ -1,34 +1,33 @@
 "use client"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
+
 import {
   IconChevronDown,
   IconChevronUp,
   IconSearch,
   IconSelector,
 } from "@tabler/icons-react"
+
 import {
+  Badge,
   Center,
   Group,
-  keys,
   ScrollArea,
+  SegmentedControl,
   Table,
   Text,
   TextInput,
   UnstyledButton,
+  Loader,
 } from "@mantine/core"
 import classes from "./TableSort.module.css"
 
+// adjust this import path if your helper lives elsewhere
+import { fetchLeaderboardRows, RowData } from "../firebase/functions"
+
+type SexType = "M" | "F"
 type LiftKey = "squatKg" | "benchKg" | "deadliftKg" | "totalKg"
 type SortKey = "name" | "bodyweightKg" | LiftKey
-
-interface RowData {
-  name: string
-  bodyweightKg: number
-  squatKg: number
-  benchKg: number
-  deadliftKg: number
-  totalKg: number
-}
 
 interface ThProps {
   children: React.ReactNode
@@ -64,56 +63,6 @@ function Th({ children, reversed, sorted, onSort, align = "left" }: ThProps) {
   )
 }
 
-const initial: Omit<RowData, "totalKg">[] = [
-  {
-    name: "Alex Tan",
-    bodyweightKg: 83,
-    squatKg: 220,
-    benchKg: 140,
-    deadliftKg: 260,
-  },
-  {
-    name: "Jordan Wang",
-    bodyweightKg: 74,
-    squatKg: 200,
-    benchKg: 130,
-    deadliftKg: 245,
-  },
-  {
-    name: "Jamie Lee",
-    bodyweightKg: 63,
-    squatKg: 165,
-    benchKg: 100,
-    deadliftKg: 200,
-  },
-  {
-    name: "Chris Patel",
-    bodyweightKg: 93,
-    squatKg: 210,
-    benchKg: 145,
-    deadliftKg: 250,
-  },
-  {
-    name: "Riley Smith",
-    bodyweightKg: 69,
-    squatKg: 170,
-    benchKg: 105,
-    deadliftKg: 205,
-  },
-  {
-    name: "Taylor Brown",
-    bodyweightKg: 105,
-    squatKg: 230,
-    benchKg: 155,
-    deadliftKg: 270,
-  },
-]
-
-const data: RowData[] = initial.map((x) => ({
-  ...x,
-  totalKg: x.squatKg + x.benchKg + x.deadliftKg,
-}))
-
 function formatKg(n: number) {
   return `${n} kg`
 }
@@ -122,6 +71,11 @@ function searchFilter(rows: RowData[], query: string) {
   const q = query.toLowerCase().trim()
   if (!q) return rows
   return rows.filter((r) => r.name.toLowerCase().includes(q))
+}
+
+function sexFilter(rows: RowData[], sex: "ALL" | SexType) {
+  if (sex === "ALL") return rows
+  return rows.filter((r) => r.sex === sex)
 }
 
 function sortRows(
@@ -134,13 +88,10 @@ function sortRows(
 ) {
   const filtered = searchFilter(rows, search)
   if (!sortBy) return filtered
-
   const sorted = [...filtered].sort((a, b) => {
     const av = a[sortBy as keyof RowData]
     const bv = b[sortBy as keyof RowData]
-    if (typeof av === "number" && typeof bv === "number") {
-      return av - bv
-    }
+    if (typeof av === "number" && typeof bv === "number") return av - bv
     return String(av).localeCompare(String(bv))
   })
   return reversed ? sorted.reverse() : sorted
@@ -148,13 +99,38 @@ function sortRows(
 
 export function TableSort() {
   const [search, setSearch] = useState("")
+  const [sex, setSex] = useState<"ALL" | SexType>("ALL")
   const [sortBy, setSortBy] = useState<SortKey | null>("totalKg")
   const [reverseSortDirection, setReverseSortDirection] = useState(true) // start with Total desc
+  const [data, setData] = useState<RowData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const sortedData = useMemo(
-    () => sortRows(data, { sortBy, reversed: reverseSortDirection, search }),
-    [search, sortBy, reverseSortDirection]
-  )
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    setError(null)
+    fetchLeaderboardRows({ sex: "ALL", topN: 50, includeZeros: true })
+      .then((rows) => {
+        if (alive) setData(rows)
+        console.log(rows)
+      })
+      .catch((e) => {
+        console.error(e)
+        if (alive) setError("Failed to load leaderboard")
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const sortedData = useMemo(() => {
+    const bySex = sexFilter(data, sex)
+    return sortRows(bySex, { sortBy, reversed: reverseSortDirection, search })
+  }, [data, search, sortBy, reverseSortDirection, sex]) // ← include `data`
 
   const setSorting = (field: SortKey) => {
     const reversed =
@@ -168,13 +144,18 @@ export function TableSort() {
     const medal =
       rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank
     return (
-      <Table.Tr key={row.name}>
+      <Table.Tr key={row.uid ?? row.name}>
         <Table.Td style={{ width: 60, textAlign: "center", fontWeight: 700 }}>
           {medal}
         </Table.Td>
         <Table.Td>{row.name}</Table.Td>
+        <Table.Td>
+          <Badge variant="light" color={row.sex === "M" ? "blue" : "pink"}>
+            {row.sex}
+          </Badge>
+        </Table.Td>
         <Table.Td style={{ textAlign: "right" }}>
-          {formatKg(row.bodyweightKg)}
+          {formatKg(row.weightClass)}
         </Table.Td>
         <Table.Td style={{ textAlign: "right" }}>
           {formatKg(row.squatKg)}
@@ -194,88 +175,114 @@ export function TableSort() {
 
   return (
     <ScrollArea>
-      <TextInput
-        placeholder="Search athlete by name"
-        mb="md"
-        leftSection={<IconSearch size={16} stroke={1.7} />}
-        value={search}
-        onChange={(e) => setSearch(e.currentTarget.value)}
-      />
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="xs"
-        miw={800}
-        layout="fixed"
-        highlightOnHover
-        striped
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th style={{ width: 60, textAlign: "center" }}>Rank</Table.Th>
-            <Th
-              sorted={sortBy === "name"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("name")}
-            >
-              Athlete
-            </Th>
-            <Th
-              align="right"
-              sorted={sortBy === "bodyweightKg"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("bodyweightKg")}
-            >
-              BW (kg)
-            </Th>
-            <Th
-              align="right"
-              sorted={sortBy === "squatKg"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("squatKg")}
-            >
-              Squat
-            </Th>
-            <Th
-              align="right"
-              sorted={sortBy === "benchKg"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("benchKg")}
-            >
-              Bench
-            </Th>
-            <Th
-              align="right"
-              sorted={sortBy === "deadliftKg"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("deadliftKg")}
-            >
-              Deadlift
-            </Th>
-            <Th
-              align="right"
-              sorted={sortBy === "totalKg"}
-              reversed={reverseSortDirection}
-              onSort={() => setSorting("totalKg")}
-            >
-              Total
-            </Th>
-          </Table.Tr>
-        </Table.Thead>
+      <Group justify="space-between" mb="md">
+        <TextInput
+          placeholder="Search athlete by name"
+          leftSection={<IconSearch size={16} stroke={1.7} />}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          w="100%"
+          style={{ maxWidth: 420 }}
+        />
+        <SegmentedControl
+          value={sex}
+          onChange={(v) => setSex(v as "ALL" | SexType)}
+          data={[
+            { label: "All", value: "ALL" },
+            { label: "Men", value: "M" },
+            { label: "Women", value: "F" },
+          ]}
+        />
+      </Group>
 
-        <Table.Tbody>
-          {rows.length > 0 ? (
-            rows
-          ) : (
+      {loading ? (
+        <Group justify="center" py="lg">
+          <Loader />
+        </Group>
+      ) : error ? (
+        <Text c="red" ta="center" py="lg">
+          {error}
+        </Text>
+      ) : (
+        <Table
+          horizontalSpacing="md"
+          verticalSpacing="xs"
+          miw={880}
+          layout="fixed"
+          highlightOnHover
+          striped
+        >
+          <Table.Thead>
             <Table.Tr>
-              <Table.Td colSpan={7}>
-                <Text fw={500} ta="center">
-                  No athletes found
-                </Text>
-              </Table.Td>
+              <Table.Th style={{ width: 60, textAlign: "center" }}>
+                Rank
+              </Table.Th>
+              <Th
+                sorted={sortBy === "name"}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting("name")}
+              >
+                Athlete
+              </Th>
+              <Table.Th style={{ width: 80, textAlign: "left" }}>Sex</Table.Th>
+              <Th
+                align="right"
+                sorted={sortBy === "bodyweightKg"}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting("bodyweightKg")}
+              >
+                BW (kg)
+              </Th>
+              <Th
+                align="right"
+                sorted={sortBy === "squatKg"}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting("squatKg")}
+              >
+                Squat
+              </Th>
+              <Th
+                align="right"
+                sorted={sortBy === "benchKg"}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting("benchKg")}
+              >
+                Bench
+              </Th>
+              <Th
+                align="right"
+                sorted={sortBy === "deadliftKg"}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting("deadliftKg")}
+              >
+                Deadlift
+              </Th>
+              <Th
+                align="right"
+                sorted={sortBy === "totalKg"}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting("totalKg")}
+              >
+                Total
+              </Th>
             </Table.Tr>
-          )}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+
+          <Table.Tbody>
+            {rows.length > 0 ? (
+              rows
+            ) : (
+              <Table.Tr>
+                <Table.Td colSpan={8}>
+                  <Text fw={500} ta="center">
+                    No athletes found
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      )}
     </ScrollArea>
   )
 }
