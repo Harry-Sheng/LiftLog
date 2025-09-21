@@ -19,6 +19,7 @@ import {
   TextInput,
   UnstyledButton,
   Loader,
+  Anchor,
 } from "@mantine/core"
 import classes from "./TableSort.module.css"
 
@@ -110,7 +111,7 @@ export function TableSort() {
     let alive = true
     setLoading(true)
     setError(null)
-    fetchLeaderboardRows({ sex: "ALL", topN: 50, includeZeros: true })
+    fetchLeaderboardRows({ sex: "ALL", topN: 50, includeZeros: false })
       .then((rows) => {
         if (alive) setData(rows)
         console.log(rows)
@@ -158,14 +159,48 @@ export function TableSort() {
           {formatKg(row.weightClass)}
         </Table.Td>
         <Table.Td style={{ textAlign: "right" }}>
-          {formatKg(row.squatKg)}
+          {row.video?.squat ? (
+            <Anchor
+              href={`/watch?v=${"processed-" + row.video.squat}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "underline" }}
+            >
+              {formatKg(row.squatKg)}
+            </Anchor>
+          ) : (
+            formatKg(row.squatKg)
+          )}
         </Table.Td>
         <Table.Td style={{ textAlign: "right" }}>
-          {formatKg(row.benchKg)}
+          {row.video?.bench ? (
+            <Anchor
+              href={`/watch?v=${"processed-" + row.video.bench}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "underline" }}
+            >
+              {formatKg(row.benchKg)}
+            </Anchor>
+          ) : (
+            formatKg(row.benchKg)
+          )}
         </Table.Td>
         <Table.Td style={{ textAlign: "right" }}>
-          {formatKg(row.deadliftKg)}
+          {row.video?.deadlift ? (
+            <Anchor
+              href={`/watch?v=${"processed-" + row.video.deadlift}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "underline" }}
+            >
+              {formatKg(row.deadliftKg)}
+            </Anchor>
+          ) : (
+            formatKg(row.deadliftKg)
+          )}
         </Table.Td>
+
         <Table.Td style={{ textAlign: "right", fontWeight: 700 }}>
           {formatKg(row.totalKg)}
         </Table.Td>

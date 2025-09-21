@@ -53,6 +53,11 @@ export interface RowData {
   benchKg: number
   deadliftKg: number
   totalKg: number
+  video?: {
+    squat?: string
+    bench?: string
+    deadlift?: string
+  }
 }
 
 type FetchOpts = {
@@ -102,6 +107,11 @@ export async function fetchLeaderboardRows(
       benchKg: bench,
       deadliftKg: dead,
       totalKg: total,
+      video: {
+        squat: u?.pbs?.SQUAT?.videoFilename || "",
+        bench: u?.pbs?.BENCH?.videoFilename || "",
+        deadlift: u?.pbs?.DEADLIFT?.videoFilename || "",
+      },
     }
   })
 
