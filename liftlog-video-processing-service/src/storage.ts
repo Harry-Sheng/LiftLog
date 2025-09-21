@@ -29,7 +29,7 @@ export function convertVideo(rawVideoName: string, processedVideoName: string) {
     ffmpeg(`${localRawVideoPath}/${rawVideoName}`)
       .outputOptions(
         "-vf",
-        "scale=-1:360,pad=ceil(iw/2)*2:ceil(ih/2)*2", // Scale to 360p
+        "scale=-1:720,pad=ceil(iw/2)*2:ceil(ih/2)*2", // Scale to 720p
         "-pix_fmt",
         "yuv420p" // Ensure 8-bit color depth (browser-compatible)
       )
