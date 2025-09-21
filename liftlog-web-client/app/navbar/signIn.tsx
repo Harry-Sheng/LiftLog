@@ -17,7 +17,7 @@ export default function SignIn({ user }: SignInProps) {
       ) : (
         // If user is not signed in, show sign-in button
         <button className={styles.signin} onClick={signInWithGoogle}>
-          Sign in
+          Log in with school account
         </button>
       )}
     </div>
