@@ -123,7 +123,6 @@ export async function uploadVideo(
   image: File,
   title: string,
   description: string,
-  password: string,
   liftType: LiftType,
   sex: SexType,
   weightClass: number,
@@ -131,7 +130,6 @@ export async function uploadVideo(
 ) {
   const response: any = await generateUploadUrlFunction({
     fileExtension: file.name.split(".").pop(),
-    password,
   })
 
   // Upload the file to the signed URL
@@ -157,7 +155,6 @@ export async function uploadVideo(
 
   const thumbnailResponse: any = await generateUploadThumbnailUrlFunction({
     fileExtension: image.name.split(".").pop(),
-    password,
   })
 
   //upload via the signed url

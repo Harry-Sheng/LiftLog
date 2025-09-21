@@ -91,16 +91,16 @@ export const generateUploadUrl = onCall(
       )
     }
 
-    const { fileExtension, password } = request.data
+    const { fileExtension } = request.data
 
     // Check password
-    const expectedPassword = process.env.UPLOAD_PASSWORD
+    /* const expectedPassword = process.env.UPLOAD_PASSWORD
     if (!password || password !== expectedPassword) {
       throw new functions.https.HttpsError(
         "permission-denied",
         "Invalid upload password."
       )
-    }
+    } */
 
     const auth = request.auth
     const bucket = storage.bucket(rawVideoBucketName)
@@ -130,16 +130,16 @@ export const generateUploadThumbnailUrl = onCall(
       )
     }
 
-    const { fileExtension, password } = request.data
+    const { fileExtension } = request.data
 
     // Check password
-    const expectedPassword = process.env.UPLOAD_PASSWORD
+    /* const expectedPassword = process.env.UPLOAD_PASSWORD
     if (!password || password !== expectedPassword) {
       throw new functions.https.HttpsError(
         "permission-denied",
         "Invalid upload password."
       )
-    }
+    } */
     const auth = request.auth
     const bucket = storage.bucket(thumbnailBucketName)
 

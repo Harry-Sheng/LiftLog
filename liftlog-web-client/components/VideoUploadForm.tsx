@@ -16,7 +16,6 @@ export default function VideoUploadForm() {
   const [video, setVideo] = useState<File | null>(null)
   const [thumbnail, setThumbnail] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
-  const [password, setPassword] = useState("")
   const [liftType, setLiftType] = useState<LiftType>("SQUAT")
   const [sex, setSex] = useState<SexType>("M")
   const [weightClass, setWeightClass] = useState<number>(83)
@@ -53,7 +52,6 @@ export default function VideoUploadForm() {
         thumbnail,
         title,
         description,
-        password,
         liftType,
         sex,
         weightClass,
@@ -124,16 +122,6 @@ export default function VideoUploadForm() {
             type="file"
             accept="image/*"
             onChange={handleThumbnailChange}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3" controlId="password">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </Form.Group>

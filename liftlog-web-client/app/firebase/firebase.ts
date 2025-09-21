@@ -34,6 +34,7 @@ export const db = getFirestore(app)
 export async function signInWithGoogle() {
   try {
     await signInWithPopup(auth, new GoogleAuthProvider())
+    return true
   } catch (e: any) {
     // When blocked by identity function you'll typically see auth/… with a message
     const msg = e?.message || ""
@@ -42,7 +43,7 @@ export async function signInWithGoogle() {
       msg.includes("permission-denied")
     ) {
       alert("Please use your university Google account (@auckland.ac.nz).")
-      return
+      return false
     }
     throw e // let your global handler show other errors
   }
