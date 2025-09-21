@@ -31,8 +31,21 @@ export const db = getFirestore(app)
  * Signs the user in with a Google popup.
  * @returns A promise that resolves with the user's credentials.
  */
-export function signInWithGoogle() {
-  return signInWithPopup(auth, new GoogleAuthProvider())
+export async function signInWithGoogle() {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider())
+  } catch (e: any) {
+    // When blocked by identity function you'll typically see auth/… with a message
+    const msg = e?.message || ""
+    if (
+      msg.includes("school Google account") ||
+      msg.includes("permission-denied")
+    ) {
+      alert("Please use your university Google account (@auckland.ac.nz).")
+      return
+    }
+    throw e // let your global handler show other errors
+  }
 }
 
 /**

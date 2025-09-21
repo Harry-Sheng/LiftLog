@@ -14,6 +14,8 @@ const videoCollectionId = "videos"
 const thumbnailBucketName = "liftlog-thumbnails"
 const region = "australia-southeast1"
 
+const ALLOWED_DOMAINS = ["aucklanduni.ac.nz"]
+
 export type LiftType = "SQUAT" | "BENCH" | "DEADLIFT"
 export type SexType = "M" | "F"
 
@@ -44,6 +46,17 @@ export const createUser = functions.identity.beforeUserCreated(
     if (!user) {
       logger.error("User data is undefined in beforeUserCreated event.")
       throw new Error("Invalid user data.")
+    }
+
+    const email = (user.email || "").toLowerCase()
+    const domain = email.split("@")[1] || ""
+
+    if (!ALLOWED_DOMAINS.includes(domain)) {
+      // This blocks sign-up and surfaces an auth error to the client
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Please sign in with your school Google account."
+      )
     }
 
     const userInfo = {
