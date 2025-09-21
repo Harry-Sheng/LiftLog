@@ -20,6 +20,7 @@ import {
   UnstyledButton,
   Loader,
   Anchor,
+  Title,
 } from "@mantine/core"
 import classes from "./TableSort.module.css"
 
@@ -325,9 +326,9 @@ function TableSort() {
 export default function LeaderboardPage() {
   return (
     <div>
-      <Text fz="xl" fw={700} mb="md">
+      <Title order={2} fw={800} mb="md">
         Leaderboard
-      </Text>
+      </Title>
       <TableSort />
     </div>
   )
