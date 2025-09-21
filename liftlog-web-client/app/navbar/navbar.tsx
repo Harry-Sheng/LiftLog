@@ -46,7 +46,7 @@ export default function Navbar() {
       className="navbar navbar-expand-md bg-body border-bottom sticky-top"
       role="navigation"
     >
-      <div className="container-lg">
+      <div className="container-fluid">
         {/* Logo */}
         <Link href="/" className="navbar-brand d-flex align-items-center">
           <img

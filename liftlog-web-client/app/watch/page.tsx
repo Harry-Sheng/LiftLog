@@ -54,7 +54,7 @@ function WatchContent() {
   }, [id])
 
   return (
-    <Container fluid>
+    <Container fluid className="mt-1 mt-md-2">
       <Row>
         <Col lg={8}>
           {/* Video Player */}

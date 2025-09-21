@@ -325,7 +325,7 @@ function TableSort() {
 
 export default function LeaderboardPage() {
   return (
-    <div>
+    <div className="mt-1 mt-md-2">
       <Title order={2} fw={800} mb="md">
         Leaderboard
       </Title>
