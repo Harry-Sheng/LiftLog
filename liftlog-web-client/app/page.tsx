@@ -75,8 +75,12 @@ export default function Home() {
                           className="me-2"
                         />
                         <div>
-                          <h6 className="mb-0">
-                            {video.title || "Untitled Video"}
+                          <h6 className="mb-1">
+                            {video?.title
+                              ? video.title.length > 40
+                                ? video.title.slice(0, 40) + "..."
+                                : video.title
+                              : ""}
                           </h6>
                           <small className="text-muted">
                             {video.userDisplayName || "Unknown User"} • {}
