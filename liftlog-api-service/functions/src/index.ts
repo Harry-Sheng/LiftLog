@@ -145,26 +145,17 @@ export const generateUploadThumbnailUrl = onCall(
 )
 
 export const getVideos = onCall(
-  { maxInstances: 1, region: region },
-  async () => {
+  { maxInstances: 1, region },
+  async (request) => {
+    const limit = request.data?.limit ?? 35
     const querySnapshot = await firestore
       .collection(videoCollectionId)
-      .limit(35)
+      .limit(limit)
       .get()
     return querySnapshot.docs.map((doc) => doc.data())
   }
 )
 
-export const getFiveVideos = onCall(
-  { maxInstances: 1, region: region },
-  async () => {
-    const querySnapshot = await firestore
-      .collection(videoCollectionId)
-      .limit(5)
-      .get()
-    return querySnapshot.docs.map((doc) => doc.data())
-  }
-)
 
 export const getVideo = onCall(
   { maxInstances: 1, region: region },

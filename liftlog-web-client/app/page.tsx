@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Video, getVideos } from "./firebase/functions"
+import { Video, getNVideos } from "./firebase/functions"
 import { Container, Row, Col, Card, Image, Spinner } from "react-bootstrap"
 import "bootstrap/dist/css/bootstrap.min.css"
 import LeaderboardPage from "./leaderboard/page"
@@ -13,7 +13,7 @@ export default function Home() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const fetchedVideos = await getVideos()
+        const fetchedVideos = await await getNVideos(10)
         setVideos(fetchedVideos)
       } catch (error) {
         console.error("Error fetching videos:", error)

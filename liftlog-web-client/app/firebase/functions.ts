@@ -190,6 +190,11 @@ export async function getVideo(id: string) {
 }
 
 export async function getFiveVideo() {
-  const response: any = await getFiveVideosFunction()
+  const response: any = await getVideosFunction({ limit: 5 })
+  return response.data as Video[]
+}
+
+export async function getNVideos(n: number) {
+  const response: any = await getVideosFunction({ limit: n })
   return response.data as Video[]
 }
