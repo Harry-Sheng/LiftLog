@@ -98,7 +98,7 @@ function sortRows(
   return reversed ? sorted.reverse() : sorted
 }
 
-export function TableSort() {
+function TableSort() {
   const [search, setSearch] = useState("")
   const [sex, setSex] = useState<"ALL" | SexType>("ALL")
   const [sortBy, setSortBy] = useState<SortKey | null>("totalKg")
