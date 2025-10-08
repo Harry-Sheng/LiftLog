@@ -58,6 +58,14 @@ app.post("/process-video", async (req: any, res: any) => {
   try {
     await convertVideo(inputFileName, outputFileName)
   } catch (err) {
+    console.error(
+      JSON.stringify({
+        severity: "ERROR",
+        msg: "Processing failed",
+        route: req.path,
+        user: req.user?.id ?? null,
+      })
+    )
     await Promise.all([
       deleteRawVideo(inputFileName),
       deleteProcessedVideo(outputFileName),
